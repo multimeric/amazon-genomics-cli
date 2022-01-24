@@ -8,11 +8,13 @@ import { ILogGroup } from "aws-cdk-lib/aws-logs";
 import { ComputeResourceType } from "@aws-cdk/aws-batch-alpha";
 import { LAUNCH_TEMPLATE, wesAdapterSourcePath } from "../../constants";
 import { Construct } from "constructs";
-import { ManagedPolicy, PolicyDocument, PolicyStatement, Role, ServicePrincipal } from "aws-cdk-lib/aws-iam";
+import { IRole, ManagedPolicy, PolicyDocument, PolicyStatement, Role, ServicePrincipal } from "aws-cdk-lib/aws-iam";
 import { IVpc } from "aws-cdk-lib/aws-ec2";
 import { ContextAppParameters } from "../../env";
 import { HeadJobBatchPolicy } from "../../roles/policies/head-job-batch-policy";
 import { BatchPolicies } from "../../roles/policies/batch-policies";
+import { Bucket, IBucket } from "aws-cdk-lib/aws-s3";
+import { BucketOperations } from "../../common/BucketOperations";
 
 export class SnakemakeEngineConstruct extends EngineConstruct {
   public readonly apiProxy: ApiProxy;
@@ -20,6 +22,7 @@ export class SnakemakeEngineConstruct extends EngineConstruct {
   public readonly snakemakeEngine: SnakemakeEngine;
   private readonly batchHead: Batch;
   private readonly batchWorkers: Batch;
+  private readonly outputBucket: IBucket;
 
   constructor(scope: Construct, id: string, props: EngineOptions) {
     super(scope, id);
@@ -61,9 +64,13 @@ export class SnakemakeEngineConstruct extends EngineConstruct {
         }),
       },
     });
+    this.outputBucket = Bucket.fromBucketName(this, "OutputBucket", params.outputBucketName);
+    this.outputBucket.grantRead(adapterRole);
 
     this.batchHead.grantJobAdministration(adapterRole);
     this.batchWorkers.grantJobAdministration(this.batchHead.role);
+
+    this.grantS3Permissions(contextParameters, [this.batchHead.role, this.batchWorkers.role]);
 
     const engineLogGroup = this.snakemakeEngine.logGroup;
 
@@ -90,6 +97,20 @@ export class SnakemakeEngineConstruct extends EngineConstruct {
       engineLogGroup: this.snakemakeEngine.logGroup,
       wesUrl: this.apiProxy.restApi.url,
     };
+  }
+
+  private grantS3Permissions(contextParameters: ContextAppParameters, batchRoles: IRole[]) {
+    const { artifactBucketName, readBucketArns = [], readWriteBucketArns = [] } = contextParameters;
+
+    const artifactBucket = Bucket.fromBucketName(this, "ArtifactBucket", artifactBucketName);
+
+    readBucketArns.push(artifactBucket.bucketArn);
+    readWriteBucketArns.push(this.outputBucket.bucketArn);
+
+    batchRoles.forEach((role) => {
+      BucketOperations.grantBucketAccess(this, role, readBucketArns, true);
+      BucketOperations.grantBucketAccess(this, role, readWriteBucketArns, false);
+    });
   }
 
   private renderBatch(id: string, vpc: IVpc, appParams: ContextAppParameters, computeType?: ComputeResourceType): Batch {

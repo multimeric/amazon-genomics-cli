@@ -78,7 +78,8 @@ class SnakemakeWESAdapter(BatchAdapter):
         job_id = head_job.get("jobId")
         bucket, folder = self.output_dir_s3_uri.split("/", 2)[-1].split("/", 1)
         output_file_key = f"{folder}/{job_id}/{SM_OUTPUT_FILE_NAME}"
-        output = get_s3_object_json(bucket, output_file_key, aws_s3=self.aws_s3)
+        output = get_s3_object_json(
+            bucket, output_file_key, aws_s3=self.aws_s3)
         return {"id": job_id, "outputs": output}
 
     @property

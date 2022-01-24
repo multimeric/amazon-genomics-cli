@@ -50,7 +50,7 @@ function handleManifest() {
           ## APPEND_ARGS="$(cat $MANIFEST_JSON | jq -r '.customArgument')" will pull the value attached to the key "customArgument"
           ## from the manifest.json file if the key exists, otherwise it will make it the value "".
         APPEND_ARGS=""
-        PREPEND_ARGS="--cores n"
+        PREPEND_ARGS="--aws-batch --cores all"
         ## To extend the arg strings you can do the following: APPEND_ARGS="${APPEND_ARGS} --moreArgumentsHere"
         ## After updating these you can expect your engine to be run as `ENGINE_RUN_CMD PREPEND_ARGS <agc_params> APPEND_ARGS`
         ## PREPEND_ARGS/APPEND_ARGS will only be added if they are not an empty string (the default above)
@@ -113,9 +113,9 @@ cd /opt/work/$GUID
 
 if [[ "$ENGINE_PROJECT" =~ ^s3://.* ]]; then
     echo "== Staging S3 Project =="
-    mkdir project
-    ENGINE_PROJECT_DIRECTORY="./project"
-    aws s3 cp --no-progress $ENGINE_PROJECT "${ENGINE_PROJECT_DIRECTORY}/" --recursive
+    ENGINE_PROJECT_DIRECTORY="."
+    echo "Copying from ${ENGINE_PROJECT} to '${ENGINE_PROJECT_DIRECTORY}/'"
+    aws s3 cp $ENGINE_PROJECT "${ENGINE_PROJECT_DIRECTORY}/"
     find $ENGINE_PROJECT_DIRECTORY -name '*.zip' -execdir unzip -o '{}' ';'
     ls -l $ENGINE_PROJECT_DIRECTORY
     MANIFEST_JSON=${ENGINE_PROJECT_DIRECTORY}/MANIFEST.json
@@ -123,13 +123,14 @@ if [[ "$ENGINE_PROJECT" =~ ^s3://.* ]]; then
      handleManifest
     else
       ENGINE_PROJECT="${ENGINE_PROJECT_DIRECTORY}"
+      ENGINE_PARAMS="${ENGINE_PARAMS} --aws-batch --cores all"
     fi
 fi
 echo "== Finding the project in  =="
 echo "cd ${ENGINE_PROJECT}"
 cd ${ENGINE_PROJECT}
 echo "== Running Workflow =="
-echo "$ENGINE_RUN_CMD $ENGINE_PARAMS"
+echo "${ENGINE_RUN_CMD} ${ENGINE_PARAMS}"
 $ENGINE_RUN_CMD $ENGINE_PARAMS & ENGINE_PID=$!
 
 echo "${ENGINE_NAME} pid: $ENGINE_PID"
