@@ -5,6 +5,7 @@ import { EngineJobDefinition } from "../engine-job-definition";
 import { Engine, EngineProps } from "../engine";
 import { Batch } from "../../batch";
 import { FargatePlatformVersion } from "aws-cdk-lib/aws-ecs";
+import { AccessPoint } from "aws-cdk-lib/aws-efs";
 
 export interface SnakemakeEngineProps extends EngineProps {
   readonly engineBatch: Batch;
@@ -17,13 +18,14 @@ export class SnakemakeEngine extends Engine {
   readonly headJobDefinition: JobDefinition;
   private readonly volumeName = "efs";
   private readonly engineMemoryMiB = 4096;
+  public readonly fsap: AccessPoint;
 
   constructor(scope: Construct, id: string, props: SnakemakeEngineProps) {
     super(scope, id);
 
     const { vpc, engineBatch, workerBatch } = props;
     const fileSystem = this.createFileSystem(vpc);
-    const accessPoint = this.createAccessPoint(fileSystem);
+    this.fsap = this.createAccessPoint(fileSystem);
 
     fileSystem.connections.allowDefaultPortFromAnyIpv4();
     fileSystem.grant(engineBatch.role, "elasticfilesystem:DescribeMountTargets", "elasticfilesystem:DescribeFileSystems");
@@ -40,10 +42,10 @@ export class SnakemakeEngine extends Engine {
         command: [],
         environment: {
           SM__AWS__FS: fileSystem.fileSystemId,
-          SM__AWS__FSAP: accessPoint.accessPointId,
+          SM__AWS__FSAP: this.fsap.accessPointId,
           SM__AWS__TASK_QUEUE: workerBatch.jobQueue.jobQueueArn,
         },
-        volumes: [this.toVolume(fileSystem, accessPoint, this.volumeName)],
+        volumes: [this.toVolume(fileSystem, this.fsap, this.volumeName)],
         mountPoints: [this.toMountPoint("/mnt/efs", this.volumeName)],
       },
     });

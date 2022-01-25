@@ -35,6 +35,7 @@ class SnakemakeWESAdapter(BatchAdapter):
         output_dir_s3_uri: str,
         task_queue: str,
         workflow_role: str,
+        fsap_id: str,
         aws_batch: BatchClient = None,
         aws_tags: ResourceGroupsTaggingAPIClient = None,
         aws_s3: S3Client = None,
@@ -44,6 +45,7 @@ class SnakemakeWESAdapter(BatchAdapter):
         self.output_dir_s3_uri = output_dir_s3_uri
         self.task_queue = task_queue
         self.workflow_role = workflow_role
+        self.fsap_id = fsap_id
         self.aws_tags: ResourceGroupsTaggingAPIClient = aws_tags or boto3.client(
             "resourcegroupstaggingapi", region_name=os.environ["AWS_REGION"]
         )
@@ -72,6 +74,7 @@ class SnakemakeWESAdapter(BatchAdapter):
             "--aws-batch-workflow-role {}".format(self.workflow_role),
             "--aws-batch-task-queue {}".format(self.task_queue),
             "--default-remote-provider S3",
+            "--aws-batch-fsap-id {}".format(self.fsap_id),
             "--default-remote-prefix {}".format(self.output_dir_s3_uri),
             "--no-shared-fs"
         )

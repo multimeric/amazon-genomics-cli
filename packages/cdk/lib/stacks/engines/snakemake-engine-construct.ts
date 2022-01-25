@@ -80,7 +80,8 @@ export class SnakemakeEngineConstruct extends EngineConstruct {
       jobQueueArn: this.batchHead.jobQueue.jobQueueArn,
       jobDefinitionArn: this.snakemakeEngine.headJobDefinition.jobDefinitionArn,
       workflowRoleArn: this.batchWorkers.role.roleArn,
-      taskQueueArn: this.batchWorkers.jobQueue.jobQueueArn
+      taskQueueArn: this.batchWorkers.jobQueue.jobQueueArn,
+      fsapId: this.snakemakeEngine.fsap.accessPointId,
     });
     this.adapterLogGroup = lambda.logGroup;
 
@@ -126,16 +127,14 @@ export class SnakemakeEngineConstruct extends EngineConstruct {
     });
   }
 
-  private renderAdapterLambda({ vpc, role, jobQueueArn, jobDefinitionArn, taskQueueArn, workflowRoleArn }) {
+  private renderAdapterLambda({ vpc, role, jobQueueArn, jobDefinitionArn, taskQueueArn, workflowRoleArn, fsapId }) {
     return renderPythonLambda(this, "SnakemakeWesAdapterLambda", vpc, role, wesAdapterSourcePath, {
       ENGINE_NAME: "snakemake",
       JOB_QUEUE: jobQueueArn,
       JOB_DEFINITION: jobDefinitionArn,
       TASK_QUEUE: taskQueueArn,
-      WORKFLOW_ROLE: workflowRoleArn
+      WORKFLOW_ROLE: workflowRoleArn,
+      FSAP_ID: fsapId,
     });
   }
 }
-
-// TASK_QUEUE = os.getenv("TASK_QUEUE")
-// WORKFLOW_ROLE = os.getenv("WORKFLOW_ROLE")

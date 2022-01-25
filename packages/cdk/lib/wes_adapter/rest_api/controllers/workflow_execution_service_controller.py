@@ -29,6 +29,7 @@ ENGINE_LOG_GROUP = os.getenv("ENGINE_LOG_GROUP")
 OUTPUT_DIR_S3_URI = os.getenv("OUTPUT_DIR_S3_URI")
 TASK_QUEUE = os.getenv("TASK_QUEUE")
 WORKFLOW_ROLE = os.getenv("WORKFLOW_ROLE")
+FSAP_ID = os.getenv("FSAP_ID")
 
 if ENGINE_NAME == "nextflow":
     print("Using Nextflow adapter")
@@ -44,7 +45,8 @@ elif ENGINE_NAME == "snakemake":
         job_definition=JOB_DEFINITION,
         output_dir_s3_uri=OUTPUT_DIR_S3_URI,
         task_queue=TASK_QUEUE,
-        workflow_role=WORKFLOW_ROLE
+        workflow_role=WORKFLOW_ROLE,
+        fsap_id=FSAP_ID,
     )
 
 elif ENGINE_NAME == "cromwell":
