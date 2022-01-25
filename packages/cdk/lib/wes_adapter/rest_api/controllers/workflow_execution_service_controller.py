@@ -27,6 +27,8 @@ JOB_QUEUE = os.getenv("JOB_QUEUE")
 JOB_DEFINITION = os.getenv("JOB_DEFINITION")
 ENGINE_LOG_GROUP = os.getenv("ENGINE_LOG_GROUP")
 OUTPUT_DIR_S3_URI = os.getenv("OUTPUT_DIR_S3_URI")
+TASK_QUEUE = os.getenv("TASK_QUEUE")
+WORKFLOW_ROLE = os.getenv("WORKFLOW_ROLE")
 
 if ENGINE_NAME == "nextflow":
     print("Using Nextflow adapter")
@@ -40,7 +42,9 @@ elif ENGINE_NAME == "snakemake":
     adapter = SnakemakeWESAdapter(
         job_queue=JOB_QUEUE,
         job_definition=JOB_DEFINITION,
-        output_dir_s3_uri=OUTPUT_DIR_S3_URI
+        output_dir_s3_uri=OUTPUT_DIR_S3_URI,
+        task_queue=TASK_QUEUE,
+        workflow_role=WORKFLOW_ROLE
     )
 
 elif ENGINE_NAME == "cromwell":

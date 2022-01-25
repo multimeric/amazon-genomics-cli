@@ -33,6 +33,8 @@ class SnakemakeWESAdapter(BatchAdapter):
         job_queue: str,
         job_definition: str,
         output_dir_s3_uri: str,
+        task_queue: str,
+        workflow_role: str,
         aws_batch: BatchClient = None,
         aws_tags: ResourceGroupsTaggingAPIClient = None,
         aws_s3: S3Client = None,
@@ -40,6 +42,8 @@ class SnakemakeWESAdapter(BatchAdapter):
     ):
         super().__init__(job_queue, job_definition, aws_batch, logger)
         self.output_dir_s3_uri = output_dir_s3_uri
+        self.task_queue = task_queue
+        self.workflow_role = workflow_role
         self.aws_tags: ResourceGroupsTaggingAPIClient = aws_tags or boto3.client(
             "resourcegroupstaggingapi", region_name=os.environ["AWS_REGION"]
         )
@@ -57,7 +61,22 @@ class SnakemakeWESAdapter(BatchAdapter):
         workflow_url=None,
         workflow_attachment=None,
     ):
-        command = [workflow_url]
+        engine_params_to_pass = []
+        if workflow_params is not None:
+            engine_params_to_pass.append(workflow_engine_parameters)
+
+        # TODO: add tags from child job
+        engine_params_to_pass.append(
+            "--aws-batch",
+            "--cores all",
+            "--aws-batch-workflow-role {}".format(self.workflow_role),
+            "--aws-batch-task-queue {}".format(self.task_queue),
+            "--default-remote-provider S3",
+            "--default-remote-prefix {}".format(self.output_dir_s3_uri),
+            "--no-shared-fs"
+        )
+        delimiter = " "
+        command = [workflow_url, delimiter.join(engine_params_to_pass)]
         return command
 
     def environment(self):
