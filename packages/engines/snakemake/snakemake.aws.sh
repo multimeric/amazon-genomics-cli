@@ -49,7 +49,7 @@ function handleManifest() {
           ## APPEND_ARGS="$(cat $MANIFEST_JSON | jq -r '.customArgument')" will pull the value attached to the key "customArgument"
           ## from the manifest.json file if the key exists, otherwise it will make it the value "".
         APPEND_ARGS=""
-        PREPEND_ARGS=""
+        PREPEND_ARGS="--aws-batch-tags AWS_BATCH_PARENT_JOB_ID=${AWS_BATCH_JOB_ID}"
         ## To extend the arg strings you can do the following: APPEND_ARGS="${APPEND_ARGS} --moreArgumentsHere"
         ## After updating these you can expect your engine to be run as `ENGINE_RUN_CMD PREPEND_ARGS <agc_params> APPEND_ARGS`
         ## PREPEND_ARGS/APPEND_ARGS will only be added if they are not an empty string (the default above)

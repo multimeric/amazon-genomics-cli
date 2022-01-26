@@ -41,8 +41,13 @@ export class SnakemakeEngineConstruct extends EngineConstruct {
         resources: ["*"],
       })
     );
-    // TODO: pass role on head  "iam:PassRole"
 
+    this.batchHead.role.addToPrincipalPolicy(
+      new PolicyStatement({
+        actions: ["iam:PassRole"],
+        resources: [this.batchHead.role.roleArn]
+      })
+    );
     this.snakemakeEngine = new SnakemakeEngine(this, "SnakemakeEngine", {
       vpc: props.vpc,
       engineBatch: this.batchHead,

@@ -69,7 +69,6 @@ class SnakemakeWESAdapter(BatchAdapter):
                 workflow_engine_parameters))
             engine_params_to_pass.append(workflow_engine_parameters)
 
-        # TODO: add tags from child job
         engine_params_to_pass.extend(
             [
                 "--aws-batch",
@@ -79,7 +78,7 @@ class SnakemakeWESAdapter(BatchAdapter):
                 "--default-remote-provider S3",
                 "--default-remote-prefix {}/test".format(
                     self.output_dir_s3_uri),
-                "--aws-batch-fsap-id {}".format(self.fsap_id),  # todo: remove
+                "--aws-batch-fsap-id {}".format(self.fsap_id),
                 "--no-shared-fs"
             ]
         )
