@@ -41,6 +41,7 @@ export class SnakemakeEngineConstruct extends EngineConstruct {
         resources: ["*"],
       })
     );
+    // TODO: pass role on head  "iam:PassRole"
 
     this.snakemakeEngine = new SnakemakeEngine(this, "SnakemakeEngine", {
       vpc: props.vpc,
@@ -79,9 +80,10 @@ export class SnakemakeEngineConstruct extends EngineConstruct {
       role: adapterRole,
       jobQueueArn: this.batchHead.jobQueue.jobQueueArn,
       jobDefinitionArn: this.snakemakeEngine.headJobDefinition.jobDefinitionArn,
-      workflowRoleArn: this.batchWorkers.role.roleArn,
+      workflowRoleArn: this.batchHead.role.roleArn,
       taskQueueArn: this.batchWorkers.jobQueue.jobQueueArn,
       fsapId: this.snakemakeEngine.fsap.accessPointId,
+      outputBucket: params.outputBucketName
     });
     this.adapterLogGroup = lambda.logGroup;
 
@@ -127,7 +129,7 @@ export class SnakemakeEngineConstruct extends EngineConstruct {
     });
   }
 
-  private renderAdapterLambda({ vpc, role, jobQueueArn, jobDefinitionArn, taskQueueArn, workflowRoleArn, fsapId }) {
+  private renderAdapterLambda({ vpc, role, jobQueueArn, jobDefinitionArn, taskQueueArn, workflowRoleArn, fsapId, outputBucket }) {
     return renderPythonLambda(this, "SnakemakeWesAdapterLambda", vpc, role, wesAdapterSourcePath, {
       ENGINE_NAME: "snakemake",
       JOB_QUEUE: jobQueueArn,
@@ -135,6 +137,7 @@ export class SnakemakeEngineConstruct extends EngineConstruct {
       TASK_QUEUE: taskQueueArn,
       WORKFLOW_ROLE: workflowRoleArn,
       FSAP_ID: fsapId,
+      OUTPUT_DIR_S3_URI: outputBucket
     });
   }
 }

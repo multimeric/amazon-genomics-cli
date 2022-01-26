@@ -20,7 +20,6 @@ ENGINE_PROJECT=$1
 shift
 ENGINE_PARAMS="$@"
 
-
 ##### MODIFY #######
 ## set your engine name and the run command for the engine 
 
@@ -39,7 +38,7 @@ function handleManifest() {
       fi
       ENGINE_OPTIONS="$(cat $MANIFEST_JSON | jq -r '.engineOptions')" 
       if [[ -n "$ENGINE_OPTIONS" ]] ; then
-         ENGINE_PARAMS="${ENGINE_OPTIONS}"
+         ENGINE_PARAMS="${ENGINE_PARAMS} ${ENGINE_OPTIONS}"
       fi
       ###### MODIFY ###### 
         ## Add arguments to your run command if there's a manifest file
@@ -50,7 +49,7 @@ function handleManifest() {
           ## APPEND_ARGS="$(cat $MANIFEST_JSON | jq -r '.customArgument')" will pull the value attached to the key "customArgument"
           ## from the manifest.json file if the key exists, otherwise it will make it the value "".
         APPEND_ARGS=""
-        PREPEND_ARGS="--aws-batch --cores all"
+        PREPEND_ARGS=""
         ## To extend the arg strings you can do the following: APPEND_ARGS="${APPEND_ARGS} --moreArgumentsHere"
         ## After updating these you can expect your engine to be run as `ENGINE_RUN_CMD PREPEND_ARGS <agc_params> APPEND_ARGS`
         ## PREPEND_ARGS/APPEND_ARGS will only be added if they are not an empty string (the default above)
@@ -115,7 +114,9 @@ if [[ "$ENGINE_PROJECT" =~ ^s3://.* ]]; then
     echo "== Staging S3 Project =="
     ENGINE_PROJECT_DIRECTORY="."
     echo "Copying from ${ENGINE_PROJECT} to '${ENGINE_PROJECT_DIRECTORY}/'"
+    set +e
     aws s3 cp $ENGINE_PROJECT "${ENGINE_PROJECT_DIRECTORY}/"
+    set -e
     find $ENGINE_PROJECT_DIRECTORY -name '*.zip' -execdir unzip -o '{}' ';'
     ls -l $ENGINE_PROJECT_DIRECTORY
     MANIFEST_JSON=${ENGINE_PROJECT_DIRECTORY}/MANIFEST.json
@@ -123,7 +124,7 @@ if [[ "$ENGINE_PROJECT" =~ ^s3://.* ]]; then
      handleManifest
     else
       ENGINE_PROJECT="${ENGINE_PROJECT_DIRECTORY}"
-      ENGINE_PARAMS="${ENGINE_PARAMS} --aws-batch --cores all"
+      ENGINE_PARAMS="${ENGINE_PARAMS}"
     fi
 fi
 echo "== Finding the project in  =="

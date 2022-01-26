@@ -64,19 +64,24 @@ class SnakemakeWESAdapter(BatchAdapter):
         workflow_attachment=None,
     ):
         engine_params_to_pass = []
-        if workflow_params is not None:
+        if workflow_engine_parameters is not None:
+            print("The engine parameters are {}".format(
+                workflow_engine_parameters))
             engine_params_to_pass.append(workflow_engine_parameters)
 
         # TODO: add tags from child job
-        engine_params_to_pass.append(
-            "--aws-batch",
-            "--cores all",
-            "--aws-batch-workflow-role {}".format(self.workflow_role),
-            "--aws-batch-task-queue {}".format(self.task_queue),
-            "--default-remote-provider S3",
-            "--aws-batch-fsap-id {}".format(self.fsap_id),
-            "--default-remote-prefix {}".format(self.output_dir_s3_uri),
-            "--no-shared-fs"
+        engine_params_to_pass.extend(
+            [
+                "--aws-batch",
+                "--cores all",
+                "--aws-batch-workflow-role {}".format(self.workflow_role),
+                "--aws-batch-task-queue {}".format(self.task_queue),
+                "--default-remote-provider S3",
+                "--default-remote-prefix {}/test".format(
+                    self.output_dir_s3_uri),
+                "--aws-batch-fsap-id {}".format(self.fsap_id),  # todo: remove
+                "--no-shared-fs"
+            ]
         )
         delimiter = " "
         command = [workflow_url, delimiter.join(engine_params_to_pass)]
